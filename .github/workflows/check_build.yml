@@ -16,6 +16,10 @@ jobs:
 
       - name: Install gcc
         run: sudo apt-get update && sudo apt-get install -y gcc
+        
+      - name: Fetch base commit for diff
+        run: |
+          git fetch origin ${{ github.event.pull_request.base.sha }}
 
       - name: Detect changed teams
         id: detect
