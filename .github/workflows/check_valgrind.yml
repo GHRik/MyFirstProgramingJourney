@@ -1,0 +1,31 @@
+name: Valgrind Check
+
+on: [pull_request]
+
+jobs:
+  valgrind:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install valgrind
+        run: sudo apt-get update && sudo apt-get install -y gcc valgrind
+
+      - name: Detect changed teams
+        id: detect
+        run: |
+          echo "CHANGED_DIRS=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} \
+            | grep '^teams/' | cut -d/ -f1-2 | sort -u)" >> $GITHUB_ENV
+
+      - name: Run Valgrind on built binaries
+        run: |
+          for DIR in $CHANGED_DIRS; do
+            echo "🔍 Running valgrind in $DIR"
+            mkdir -p $DIR/output_CI
+            if [ -f "$DIR/test_input.txt" ]; then
+              gcc -o $DIR/a.out $DIR/*.c
+              valgrind --leak-check=full --error-exitcode=1 $DIR/a.out < $DIR/test_input.txt 2>&1 | tee $DIR/output_CI/valgrind.log
+            else
+              echo "ℹ️ No test_input.txt found" | tee $DIR/output_CI/valgrind.log
+            fi
+          done
