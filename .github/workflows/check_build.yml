@@ -20,15 +20,20 @@ jobs:
       - name: Detect changed teams
         id: detect
         run: |
-          echo "CHANGED_DIRS=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} \
+          echo "CHANGED_DIRS=$(git diff --name-only origin/master...HEAD \
             | grep '^teams/' | cut -d/ -f1-2 | sort -u)" >> $GITHUB_ENV
 
       - name: Compile changed teams
         run: |
           for DIR in $CHANGED_DIRS; do
-            echo "🛠 Compiling $DIR"
+            echo "Compiling $DIR"
             mkdir -p $DIR/output_CI
-            gcc -Wall -Wextra -Werror -o $DIR/a.out $DIR/*.c 2>&1 | tee $DIR/output_CI/build.log
+            gcc -Wall -Wextra -Werror -o $DIR/a.out $DIR/*.c > $DIR/output_CI/build.log 2>&1
+            if [ $? -ne 0 ]; then
+              echo "Compilation failed in $DIR"
+              cat $DIR/output_CI/build.log
+              exit 1
+            fi
           done
 
       - name: Upload logs
