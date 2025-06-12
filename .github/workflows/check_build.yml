@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # Potrzebne do pełnego diffowania
+          fetch-depth: 0
 
       - name: Install gcc
         run: sudo apt-get update && sudo apt-get install -y gcc
