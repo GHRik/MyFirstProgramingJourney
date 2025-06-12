@@ -62,4 +62,3 @@ jobs:
         with:
           name: ${{ github.job }}-logs-${{ github.run_number }}
           path: teams/**/output_CI/*.log
-
