@@ -56,8 +56,10 @@ jobs:
             fi
           done
 
-      - name: Upload logs
+      - name: Upload logs even on failure
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.job }}-logs-${{ github.run_number }}
           path: teams/**/output_CI/*.log
+
