@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Install gcc
         run: sudo apt-get update && sudo apt-get install -y gcc
@@ -20,23 +22,42 @@ jobs:
       - name: Detect changed teams
         id: detect
         run: |
-          echo "CHANGED_DIRS=$(git diff --name-only origin/master...HEAD \
-            | grep '^teams/' | cut -d/ -f1-2 | sort -u)" >> $GITHUB_ENV
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE=${{ github.event.pull_request.base.sha }}
+            HEAD=${{ github.event.pull_request.head.sha }}
+          else
+            BASE=$(git rev-parse HEAD^)
+            HEAD=$(git rev-parse HEAD)
+          fi
+
+          echo "🔍 Diffing: $BASE -> $HEAD"
+
+          CHANGED_DIRS=$(git diff --name-only $BASE $HEAD \
+            | grep '^teams/' | cut -d/ -f1-2 | sort -u)
+
+          echo "CHANGED_DIRS=$CHANGED_DIRS" >> $GITHUB_ENV
+          echo "📂 Changed dirs: $CHANGED_DIRS"
 
       - name: Compile changed teams
         run: |
+          if [ -z "$CHANGED_DIRS" ]; then
+            echo "⏭ No changes in teams/** — skipping build."
+            exit 0
+          fi
+
           for DIR in $CHANGED_DIRS; do
-            echo "Compiling $DIR"
+            echo "🛠 Compiling $DIR"
             mkdir -p $DIR/output_CI
             gcc -Wall -Wextra -Werror -o $DIR/a.out $DIR/*.c > $DIR/output_CI/build.log 2>&1
             if [ $? -ne 0 ]; then
-              echo "Compilation failed in $DIR"
+              echo "❌ Compilation failed in $DIR"
               cat $DIR/output_CI/build.log
               exit 1
             fi
           done
 
-      - name: Upload logs
+      - name: Upload logs even on failure
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.job }}-logs-${{ github.run_number }}

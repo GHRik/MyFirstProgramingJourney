@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Install clang-format
         run: sudo apt-get update && sudo apt-get install -y clang-format
@@ -20,19 +22,33 @@ jobs:
       - name: Detect changed teams
         id: detect
         run: |
-          echo "CHANGED_DIRS=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} \
-            | grep '^teams/' | cut -d/ -f1-2 | sort -u)" >> $GITHUB_ENV
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE=${{ github.event.pull_request.base.sha }}
+            HEAD=${{ github.event.pull_request.head.sha }}
+          else
+            BASE=$(git rev-parse HEAD^)
+            HEAD=$(git rev-parse HEAD)
+          fi
+
+          echo "🔍 Diffing: $BASE -> $HEAD"
+
+          CHANGED_DIRS=$(git diff --name-only $BASE $HEAD \
+            | grep '^teams/' | cut -d/ -f1-2 | sort -u)
+
+          echo "CHANGED_DIRS=$CHANGED_DIRS" >> $GITHUB_ENV
+          echo "📂 Changed dirs: $CHANGED_DIRS"
 
       - name: Run clang-format
         run: |
           for DIR in $CHANGED_DIRS; do
-            echo "🔧 Checking format in $DIR"
+            echo "Checking format in $DIR"
             FILES=$(find $DIR -name "*.c" -o -name "*.h")
             mkdir -p $DIR/output_CI
             clang-format --dry-run --Werror $FILES 2>&1 | tee $DIR/output_CI/format.log
           done
 
-      - name: Upload logs
+      - name: Upload logs even on failure
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.job }}-logs-${{ github.run_number }}
