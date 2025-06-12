@@ -31,7 +31,7 @@ jobs:
             gcc -Wall -Wextra -Werror -o $DIR/a.out $DIR/*.c 2>&1 | tee $DIR/output_CI/build.log
           done
 
-          - name: Upload logs
+        - name: Upload logs
             uses: actions/upload-artifact@v3
             with:
               name: ${{ github.job }}-logs-${{ github.run_number }}

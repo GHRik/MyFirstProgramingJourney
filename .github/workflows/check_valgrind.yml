@@ -36,7 +36,7 @@ jobs:
             fi
           done
 
-          - name: Upload logs
+        - name: Upload logs
             uses: actions/upload-artifact@v3
             with:
               name: ${{ github.job }}-logs-${{ github.run_number }}
