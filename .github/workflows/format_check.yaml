@@ -32,8 +32,8 @@ jobs:
             clang-format --dry-run --Werror $FILES 2>&1 | tee $DIR/output_CI/format.log
           done
 
-        - name: Upload logs
-            uses: actions/upload-artifact@v3
-            with:
-              name: ${{ github.job }}-logs-${{ github.run_number }}
-              path: output_CI/${{ github.run_number }}/*.log
+      - name: Upload logs
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ github.job }}-logs-${{ github.run_number }}
+          path: teams/**/output_CI/*.log
