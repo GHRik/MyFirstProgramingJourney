@@ -41,6 +41,9 @@ jobs:
       - name: Run Valgrind on built binaries
         run: |
           for DIR in $CHANGED_DIRS; do
+            echo "🔍 Running valgrind in $DIR"
+            mkdir -p $DIR/output_CI  # <- upewnij się, że katalog istnieje
+
             valgrind --leak-check=full --error-exitcode=1 $DIR/a.out < $DIR/test_input.txt 2>&1 | tee $DIR/output_CI/valgrind.log
             STATUS=${PIPESTATUS[0]}
             if [ $STATUS -ne 0 ]; then
