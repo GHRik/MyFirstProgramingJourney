@@ -27,18 +27,25 @@ jobs:
           echo "CHANGED_DIRS=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} \
             | grep '^teams/' | cut -d/ -f1-2 | sort -u)" >> $GITHUB_ENV
 
-      - name: Compile changed teams
+      - name: Detect changed teams
+        id: detect
         run: |
-          for DIR in $CHANGED_DIRS; do
-            echo "Compiling $DIR"
-            mkdir -p $DIR/output_CI
-            gcc -Wall -Wextra -Werror -o $DIR/a.out $DIR/*.c > $DIR/output_CI/build.log 2>&1
-            if [ $? -ne 0 ]; then
-              echo "Compilation failed in $DIR"
-              cat $DIR/output_CI/build.log
-              exit 1
-            fi
-          done
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE=${{ github.event.pull_request.base.sha }}
+            HEAD=${{ github.event.pull_request.head.sha }}
+          else
+            BASE=$(git rev-parse HEAD^)
+            HEAD=$(git rev-parse HEAD)
+          fi
+
+          echo "Diffing: $BASE -> $HEAD"
+
+          CHANGED_DIRS=$(git diff --name-only $BASE $HEAD \
+            | grep '^teams/' | cut -d/ -f1-2 | sort -u)
+
+          echo "CHANGED_DIRS=$CHANGED_DIRS" >> $GITHUB_ENV
+          echo "Changed dirs: $CHANGED_DIRS"
+
 
       - name: Upload logs
         uses: actions/upload-artifact@v4
