@@ -1,6 +1,12 @@
 name: Format Check (clang-format)
 
-on: [pull_request]
+on:
+  push:
+    paths:
+      - 'teams/**'
+  pull_request:
+    paths:
+      - 'teams/**'
 
 jobs:
   format:
