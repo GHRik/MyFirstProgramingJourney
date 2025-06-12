@@ -1,6 +1,12 @@
 name: Valgrind Check
 
-on: [pull_request]
+on:
+  push:
+    paths:
+      - 'teams/**'
+  pull_request:
+    paths:
+      - 'teams/**'
 
 jobs:
   valgrind:
