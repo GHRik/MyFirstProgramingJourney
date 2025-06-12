@@ -16,7 +16,7 @@ jobs:
 
       - name: Install gcc
         run: sudo apt-get update && sudo apt-get install -y gcc
-        
+
       - name: Fetch base commit for diff
         run: |
           git fetch origin ${{ github.event.pull_request.base.sha }}
@@ -24,7 +24,7 @@ jobs:
       - name: Detect changed teams
         id: detect
         run: |
-          echo "CHANGED_DIRS=$(git diff --name-only origin/master...HEAD \
+          echo "CHANGED_DIRS=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} \
             | grep '^teams/' | cut -d/ -f1-2 | sort -u)" >> $GITHUB_ENV
 
       - name: Compile changed teams
