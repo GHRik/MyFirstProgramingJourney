@@ -28,5 +28,5 @@ jobs:
           - name: Upload logs
             uses: actions/upload-artifact@v3
             with:
-            name: ${{ github.job }}-logs-${{ github.run_number }}
-            path: output_CI/${{ github.run_number }}/*.log
+              name: ${{ github.job }}-logs-${{ github.run_number }}
+              path: output_CI/${{ github.run_number }}/*.log
